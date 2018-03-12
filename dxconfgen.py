@@ -26,6 +26,7 @@ def save_config(configData, confFile):
   return
 
 walletconfj2_url = "https://raw.githubusercontent.com/BlocknetDX/blocknet-docs/master/json-config-templates/wallet.conf.j2"
+xbridgeconfj2_url = "https://raw.githubusercontent.com/BlocknetDX/blocknet-docs/master/json-config-templates/xbridge.conf.j2"
 
 def chain_lookup(s):
     return "https://raw.githubusercontent.com/BlocknetDX/blocknet-docs/master/json-config-templates/{}.json.j2".format(s.lower())
@@ -46,7 +47,6 @@ args = parser.parse_args()
 #print (args)
 
 if args.blockchain:
-  chainKey = ('[%s]' % (args.blockchain))  # chainKey = LTC/BTC/etc
   rpcuser = random_gen()
   rpcpass = random_gen()
   
@@ -66,24 +66,27 @@ if args.blockchain:
   xresult = xtemplate.render(rpcusername=rpcuser, rpcpassword=rpcpass, **params)
   xbridge_json = json.loads(xresult)
 
-  for x in xbridge_json: p2pport = (xbridge_json[x]['p2pPort'])
-  for x in xbridge_json: rpcport = (xbridge_json[x]['rpcPort']) 
-  res_conf = load_template(walletconfj2_url)  # generate wallet config
-  template = Template(res_conf)
-  result = template.render(rpcusername=rpcuser, rpcpassword=rpcpass, p2pPort=p2pport, rpcPort=rpcport)
-
-  xbridge_config = configparser.ConfigParser()
-  xbridge_config.optionxform = str 
-  xbridge_config[args.blockchain] = list(xbridge_json.values())[0]
   confFile = list(xbridge_json.values())[0]['Title']
   if args.configname:
     confFile = args.configname
-  with open(confFile+'-xbridge.conf', 'w') as configfile:
-    xbridge_config.write(configfile, space_around_delimiters=False) 
-  xbridge_config.write(sys.stdout, space_around_delimiters=False)
+  
+  # generate wallet config
+  for x in xbridge_json: p2pport = (xbridge_json[x]['p2pPort'])
+  for x in xbridge_json: rpcport = (xbridge_json[x]['rpcPort']) 
+  res_conf = load_template(walletconfj2_url)  
+  template = Template(res_conf)
+  result = template.render(rpcusername=rpcuser, rpcpassword=rpcpass, p2pPort=p2pport, rpcPort=rpcport)
+  save_config(result, '%s.conf' % confFile)
+  
+  # generate xbridge config
+  xbridge_config = load_template(xbridgeconfj2_url)
+  #f = open("xbridge.conf.j2", "r")
+  #xbridge_config = f.read()
+  xbridge_template = Template(xbridge_config)
+  xbridge_result = xbridge_template.render(blockchain=args.blockchain, val=list(xbridge_json.values())[0])
+  save_config(xbridge_result, confFile+'-xbridge.conf')
+  
+  print(xbridge_result)
   print ('---')
   print (result)
   
-  confFile = ('%s.conf' % confFile)
-  print (confFile)
-  save_config(result, confFile)
