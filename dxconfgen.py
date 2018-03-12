@@ -7,6 +7,7 @@ import random
 import string
 import urllib.request
 import argparse
+import configparser
 
 def random_gen(size=32, chars=string.ascii_uppercase + string.digits + string.ascii_lowercase):
   return ''.join(random.choice(chars) for x in range(size))
@@ -70,20 +71,16 @@ if args.blockchain:
   template = Template(res_conf)
   result = template.render(rpcusername=rpcuser, rpcpassword=rpcpass, p2pPort=p2pport, rpcPort=rpcport)
 
-  # this is the code needed for fileoutput, disabled as its TODO
-  #print (result)
-  #iprint (' XBRIDGE.CONF ')
-  tz = chainKey + '\r\n'
-  for x in xbridge_json: 
-    for z in xbridge_json[x]:
-      xz = ( '='.join([z, str (xbridge_json[x][z])] ))
-      tz = tz + xz + '\r\n'
-      #print (xz)
-  print (tz)
+  xbridge_config = configparser.ConfigParser()
+  xbridge_config.optionxform = str 
+  xbridge_config[args.blockchain] = list(xbridge_json.values())[0]
+  confFile = list(xbridge_json.values())[0]['Title']
+  with open(confFile+'-xbridge.conf', 'w') as configfile:
+    xbridge_config.write(configfile, space_around_delimiters=False) 
+  xbridge_config.write(sys.stdout, space_around_delimiters=False)
   print ('---')
   print (result)
-  for x in xbridge_json: confFile = (xbridge_json[x]['Title'])
-  save_config(tz, confFile+'-xbridge.conf') # chain config for xbridge.conf
+  
   confFile = ('%s.conf' % confFile)
   print (confFile)
   save_config(result, confFile)
