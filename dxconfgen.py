@@ -62,11 +62,13 @@ if args.blockchain:
 
   for x in jres_text: p2pport = (jres_text[x]['p2pPort'])
   for x in jres_text: rpcport = (jres_text[x]['rpcPort'])
-
-  result = template.render(rpcusername=rpcuser,rpcpassword=rpcpass,p2pPort=p2pport,rpcPort=rpcport)
-
+  if args.p2pport:
+    p2pport = args.p2pport
+  if args.rpcport:
+    rpcport = args.rpcport
+  result = template.render(rpcusername=rpcuser, rpcpassword=rpcpass, p2pPort=p2pport, rpcPort=rpcport)
   xtemplate = Template(res_text)
-  xresult = xtemplate.render(rpcusername=rpcuser,rpcpassword=rpcpass)
+  xresult = xtemplate.render(rpcusername=rpcuser, rpcpassword=rpcpass, p2pPort=p2pport, rpcPort=rpcport)
   # this is the code needed for fileoutput, disabled as its TODO
   #print (result)
   #iprint (' XBRIDGE.CONF ')
