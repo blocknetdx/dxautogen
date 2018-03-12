@@ -44,45 +44,45 @@ args = parser.parse_args()
 #print (args)
 
 if args.blockchain:
-  #print (args.blockchain)
   chainKey = ('[%s]' % (args.blockchain))  # chainKey = LTC/BTC/etc
+  rpcuser = random_gen()
+  rpcpass = random_gen()
+  
   # find the URL for the chain
-  #print (chain_lookup(args.blockchain))
   try:
-    res_text = load_template(chain_lookup(args.blockchain))
+    xbridge_text = load_template(chain_lookup(args.blockchain))
   except urllib.error.HTTPError as e:
     print("Config for currency {} not found".format(args.blockchain))
     sys.exit(-1)
-  jres_text = json.loads(res_text)
+  xbridge_json = json.loads(xbridge_text)
+  xtemplate = Template(xbridge_text)
+  params = {}
+  if args.p2pport:
+    params['p2pPort'] = args.p2pport
+  if args.rpcport:
+    params['rpcPort'] = args.rpcport
+  xresult = xtemplate.render(rpcusername=rpcuser, rpcpassword=rpcpass, **params)
+  xbridge_json = json.loads(xresult)
+
+  for x in xbridge_json: p2pport = (xbridge_json[x]['p2pPort'])
+  for x in xbridge_json: rpcport = (xbridge_json[x]['rpcPort']) 
   res_conf = load_template(walletconfj2_url)  # generate wallet config
   template = Template(res_conf)
-
-  rpcuser = random_gen()
-  rpcpass = random_gen()
-
-  for x in jres_text: p2pport = (jres_text[x]['p2pPort'])
-  for x in jres_text: rpcport = (jres_text[x]['rpcPort'])
-  if args.p2pport:
-    p2pport = args.p2pport
-  if args.rpcport:
-    rpcport = args.rpcport
   result = template.render(rpcusername=rpcuser, rpcpassword=rpcpass, p2pPort=p2pport, rpcPort=rpcport)
-  xtemplate = Template(res_text)
-  xresult = xtemplate.render(rpcusername=rpcuser, rpcpassword=rpcpass, p2pPort=p2pport, rpcPort=rpcport)
+
   # this is the code needed for fileoutput, disabled as its TODO
   #print (result)
   #iprint (' XBRIDGE.CONF ')
   tz = chainKey + '\r\n'
-  jres_text = json.loads(xresult)
-  for x in jres_text: 
-    for z in jres_text[x]:
-      xz = ( '='.join([z, str (jres_text[x][z])] ))
+  for x in xbridge_json: 
+    for z in xbridge_json[x]:
+      xz = ( '='.join([z, str (xbridge_json[x][z])] ))
       tz = tz + xz + '\r\n'
       #print (xz)
   print (tz)
   print ('---')
   print (result)
-  for x in jres_text: confFile = (jres_text[x]['Title'])
+  for x in xbridge_json: confFile = (xbridge_json[x]['Title'])
   save_config(tz, confFile+'-xbridge.conf') # chain config for xbridge.conf
   confFile = ('%s.conf' % confFile)
   print (confFile)
