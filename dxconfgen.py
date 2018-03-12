@@ -39,6 +39,7 @@ parser.add_argument('--verbose',
 parser.add_argument('-c', '--blockchain', type=str, help='Blockchain config to download', required=True)
 parser.add_argument('-p2p', '--p2pport', type=str, help='p2pport override', required=False, default=None)
 parser.add_argument('-rpc', '--rpcport', type=str, help='rpcport override', required=False, default=None)
+parser.add_argument('-n', '--configname', type=str, help='config file name', required=False, default=None)
 
 args = parser.parse_args()
 
@@ -75,6 +76,8 @@ if args.blockchain:
   xbridge_config.optionxform = str 
   xbridge_config[args.blockchain] = list(xbridge_json.values())[0]
   confFile = list(xbridge_json.values())[0]['Title']
+  if args.configname:
+    confFile = args.configname
   with open(confFile+'-xbridge.conf', 'w') as configfile:
     xbridge_config.write(configfile, space_around_delimiters=False) 
   xbridge_config.write(sys.stdout, space_around_delimiters=False)
