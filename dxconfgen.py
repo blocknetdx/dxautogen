@@ -2,7 +2,7 @@
 
 from jinja2 import Template
 import json
-import os
+import os, sys
 import random
 import string
 import urllib.request
@@ -26,11 +26,8 @@ def save_config(configData, confFile):
 
 walletconfj2_url = "https://raw.githubusercontent.com/BlocknetDX/blocknet-docs/master/json-config-templates/wallet.conf.j2"
 
-def chain_lookup(x):
-    return {
-        'LTC': "https://raw.githubusercontent.com/BlocknetDX/blocknet-docs/master/json-config-templates/ltc.json.j2",
-        'BLOCK': "https://raw.githubusercontent.com/BlocknetDX/blocknet-docs/master/json-config-templates/block.json.j2"
-    }.get(x, 9)
+def chain_lookup(s):
+    return "https://raw.githubusercontent.com/BlocknetDX/blocknet-docs/master/json-config-templates/{}.json.j2".format(s.lower())
 
 parser = argparse.ArgumentParser(description='blockdx-conf-gen')
 parser.add_argument('--verbose',
@@ -51,7 +48,11 @@ if args.blockchain:
   chainKey = ('[%s]' % (args.blockchain))  # chainKey = LTC/BTC/etc
   # find the URL for the chain
   #print (chain_lookup(args.blockchain))
-  res_text = load_template(chain_lookup(args.blockchain))
+  try:
+    res_text = load_template(chain_lookup(args.blockchain))
+  except urllib.error.HTTPError as e:
+    print("Config for currency {} not found".format(args.blockchain))
+    sys.exit(-1)
   jres_text = json.loads(res_text)
   res_conf = load_template(walletconfj2_url)  # generate wallet config
   template = Template(res_conf)
