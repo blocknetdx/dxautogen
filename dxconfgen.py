@@ -66,9 +66,9 @@ if args.blockchain:
   xresult = xtemplate.render(rpcusername=rpcuser, rpcpassword=rpcpass, **params)
   xbridge_json = json.loads(xresult)
 
-  confFile = list(xbridge_json.values())[0]['Title']
+  confFile = list(xbridge_json.values())[0]['Title'].lower()
   if args.configname:
-    confFile = args.configname
+    confFile = args.configname.lower()
   
   # generate wallet config
   for x in xbridge_json: p2pport = (xbridge_json[x]['p2pPort'])
