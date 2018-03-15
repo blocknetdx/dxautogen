@@ -31,7 +31,7 @@ xbridgeconfj2_url = "https://raw.githubusercontent.com/BlocknetDX/blocknet-docs/
 def chain_lookup(s):
   return "https://raw.githubusercontent.com/BlocknetDX/blocknet-docs/master/json-config-templates/{}.json.j2".format(s.lower())
 
-def generate_confs(blockchain, p2pport, rpcport, configname):
+def generate_confs(blockchain, p2pport, rpcport, configname, rpcuser, rpcpass):
   if blockchain:
     if len(blockchain) > 1:
       if p2pport:
@@ -40,11 +40,14 @@ def generate_confs(blockchain, p2pport, rpcport, configname):
         print("Warning: parameter --rpcport ignored because multiple blockchains were selected.")
       if configname:
         print("Warning: parameter --configname ignored because multiple blockchains were selected.")
-      p2pport = rpcport = configname = None
-    for blockchain in blockchain:
+      if rpcuser:
+        print("Warning: parameter --rpcuser ignored because multiple blockchains were selected.")
+      if rpcpass:
+        print("Warning: parameter --rpcpass ignored because multiple blockchains were selected.")
       rpcuser = random_gen()
       rpcpass = random_gen()
-      
+      p2pport = rpcport = configname = None
+    for blockchain in blockchain:      
       # find the URL for the chain
       try:
         xbridge_text = load_template(chain_lookup(blockchain))
@@ -58,7 +61,17 @@ def generate_confs(blockchain, p2pport, rpcport, configname):
         params['p2pPort'] = p2pport
       if args.rpcport:
         params['rpcPort'] = rpcport
-      xresult = xtemplate.render(rpcusername=rpcuser, rpcpassword=rpcpass, **params)
+      if not args.rpcuser:
+        rpcuser = random_gen()
+        params['rpcusername'] = rpcuser
+      if args.rpcuser:
+        params['rpcusername'] = rpcuser
+      if not args.rpcpass:
+        rpcpass = random_gen()
+        params['rpcpassword'] = rpcpass
+      if args.rpcpass:
+        params['rpcpassword'] = rpcpass
+      xresult = xtemplate.render(**params)
       xbridge_json = json.loads(xresult)
 
       confFile = list(xbridge_json.values())[0]['Title'].lower()
@@ -70,7 +83,7 @@ def generate_confs(blockchain, p2pport, rpcport, configname):
       for x in xbridge_json: rpcport = (xbridge_json[x]['rpcPort']) 
       res_conf = load_template(walletconfj2_url)  
       template = Template(res_conf)
-      result = template.render(rpcusername=rpcuser, rpcpassword=rpcpass, p2pPort=p2pport, rpcPort=rpcport)
+      result = template.render(rpcpassword=rpcpass, rpcusername=rpcuser, p2pPort=p2pport, rpcPort=rpcport)
       save_config(result, '%s.conf' % confFile)
         
       # generate xbridge config
@@ -90,6 +103,8 @@ if __name__ == '__main__':
   parser.add_argument('-p2p', '--p2pport', type=str, help='p2pport override', required=False, default=None)
   parser.add_argument('-rpc', '--rpcport', type=str, help='rpcport override', required=False, default=None)
   parser.add_argument('-n', '--configname', type=str, help='config file name', required=False, default=None)
+  parser.add_argument('-u', '--rpcuser', type=str, help='rpc username', required=False, default=None)
+  parser.add_argument('-p', '--rpcpass', type=str, help='rpc password', required=False, default=None)
 
   args = parser.parse_args()
-  generate_confs(args.blockchain, args.p2pport, args.rpcport, args.configname)
+generate_confs(args.blockchain, args.p2pport, args.rpcport, args.configname, args.rpcuser, args.rpcpass)
