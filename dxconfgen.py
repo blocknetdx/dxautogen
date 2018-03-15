@@ -107,4 +107,4 @@ if __name__ == '__main__':
   parser.add_argument('-p', '--rpcpass', type=str, help='rpc password', required=False, default=None)
 
   args = parser.parse_args()
-generate_confs(args.blockchain, args.p2pport, args.rpcport, args.configname, args.rpcuser, args.rpcpass)
+  generate_confs(args.blockchain, args.p2pport, args.rpcport, args.configname, args.rpcuser, args.rpcpass)
