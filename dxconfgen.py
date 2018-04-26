@@ -31,7 +31,7 @@ xbridgeconfj2_url = "https://raw.githubusercontent.com/BlocknetDX/blocknet-docs/
 def chain_lookup(s):
   return "https://raw.githubusercontent.com/BlocknetDX/blocknet-docs/master/json-config-templates/{}.json.j2".format(s.lower())
 
-def generate_confs(blockchain, p2pport, rpcport, configname):
+def generate_confs(blockchain, p2pport, rpcport, configname, username, password):
   if blockchain:
     if len(blockchain) > 1:
       if p2pport:
@@ -42,9 +42,14 @@ def generate_confs(blockchain, p2pport, rpcport, configname):
         print("Warning: parameter --configname ignored because multiple blockchains were selected.")
       p2pport = rpcport = configname = None
     for blockchain in blockchain:
-      rpcuser = random_gen()
-      rpcpass = random_gen()
-      
+      if username is None:
+        rpcuser = random_gen()
+      else:
+        rpcuser = username
+      if password is None:
+        rpcpass = random_gen()
+      else:
+        rpcpass = password
       # find the URL for the chain
       try:
         xbridge_text = load_template(chain_lookup(blockchain))
@@ -90,6 +95,8 @@ if __name__ == '__main__':
   parser.add_argument('-p2p', '--p2pport', type=str, help='p2pport override', required=False, default=None)
   parser.add_argument('-rpc', '--rpcport', type=str, help='rpcport override', required=False, default=None)
   parser.add_argument('-n', '--configname', type=str, help='config file name', required=False, default=None)
+  parser.add_argument('-u', '--username', type=str, help='RPC username, random by default', required=False, default=None)
+  parser.add_argument('-p', '--password', type=str, help='RPC password, random by default', required=False, default=None)
 
   args = parser.parse_args()
-  generate_confs(args.blockchain, args.p2pport, args.rpcport, args.configname)
+  generate_confs(args.blockchain, args.p2pport, args.rpcport, args.configname, args.username, args.password)
