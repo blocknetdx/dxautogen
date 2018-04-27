@@ -2,7 +2,7 @@
 
 from jinja2 import Template
 import json
-import os, sys
+import os, sys, os.path
 import random
 import string
 import urllib.request
@@ -31,16 +31,22 @@ xbridgeconfj2_url = "https://raw.githubusercontent.com/BlocknetDX/blocknet-docs/
 def chain_lookup(s):
   return "https://raw.githubusercontent.com/BlocknetDX/blocknet-docs/master/json-config-templates/{}.json.j2".format(s.lower())
 
-def generate_confs(blockchain, p2pport, rpcport, configname, username, password):
+def generate_confs(blockchain, p2pport, rpcport, configname, username, password, chaindir, blocknetdir):
   if blockchain:
     if len(blockchain) > 1:
       if p2pport:
         print("Warning: parameter --p2pport ignored because multiple blockchains were selected.")
       if rpcport:
         print("Warning: parameter --rpcport ignored because multiple blockchains were selected.")
+      if chaindir:
+        print("Warning: parameter --chaindir ignored because multiple blockchains were selected.")
       if configname:
         print("Warning: parameter --configname ignored because multiple blockchains were selected.")
-      p2pport = rpcport = configname = None
+      p2pport = rpcport = configname = chaindir = None
+    if chaindir is None:
+      chaindir = '.'
+    if blocknetdir is None:
+      blocknetdir = '.'
     for blockchain in blockchain:
       if username is None:
         rpcuser = random_gen()
@@ -76,7 +82,7 @@ def generate_confs(blockchain, p2pport, rpcport, configname, username, password)
       res_conf = load_template(walletconfj2_url)  
       template = Template(res_conf)
       result = template.render(rpcusername=rpcuser, rpcpassword=rpcpass, p2pPort=p2pport, rpcPort=rpcport)
-      save_config(result, '%s.conf' % confFile)
+      save_config(result, os.path.join(chaindir, '%s.conf' % confFile))
         
       # generate xbridge config
       xbridge_config = load_template(xbridgeconfj2_url)
@@ -84,7 +90,7 @@ def generate_confs(blockchain, p2pport, rpcport, configname, username, password)
       #xbridge_config = f.read()
       xbridge_template = Template(xbridge_config)
       xbridge_result = xbridge_template.render(blockchain=blockchain, val=list(xbridge_json.values())[0])
-      save_config(xbridge_result, confFile+'-xbridge.conf')
+      save_config(xbridge_result, os.path.join(blocknetdir, confFile+'-xbridge.conf'))
     
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='blockdx-conf-gen')
@@ -97,6 +103,8 @@ if __name__ == '__main__':
   parser.add_argument('-n', '--configname', type=str, help='config file name', required=False, default=None)
   parser.add_argument('-u', '--username', type=str, help='RPC username, random by default', required=False, default=None)
   parser.add_argument('-p', '--password', type=str, help='RPC password, random by default', required=False, default=None)
+  parser.add_argument('-cdir', '--chaindir', type=str, help='Chain config directory', required=False, default=None)
+  parser.add_argument('-bdir', '--blocknetdir', type=str, help='Blocknet config directore', required=False, default=None)
 
   args = parser.parse_args()
-  generate_confs(args.blockchain, args.p2pport, args.rpcport, args.configname, args.username, args.password)
+  generate_confs(args.blockchain, args.p2pport, args.rpcport, args.configname, args.username, args.password, args.chaindir, args.blocknetdir)
