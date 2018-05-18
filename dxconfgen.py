@@ -82,6 +82,8 @@ def generate_confs(blockchain, p2pport, rpcport, configname, username, password,
       res_conf = load_template(walletconfj2_url)  
       template = Template(res_conf)
       result = template.render(rpcusername=rpcuser, rpcpassword=rpcpass, p2pPort=p2pport, rpcPort=rpcport)
+      if args.daemon:
+        result += "\ndaemon=1"
       save_config(result, os.path.join(chaindir, '%s.conf' % confFile))
         
       # generate xbridge config
@@ -105,6 +107,7 @@ if __name__ == '__main__':
   parser.add_argument('-p', '--password', type=str, help='RPC password, random by default', required=False, default=None)
   parser.add_argument('-cdir', '--chaindir', type=str, help='Chain config directory', required=False, default=None)
   parser.add_argument('-bdir', '--blocknetdir', type=str, help='Blocknet config directore', required=False, default=None)
+  parser.add_argument('--daemon', action='store_true', help='Run as daemon', required=False)
 
   args = parser.parse_args()
   generate_confs(args.blockchain, args.p2pport, args.rpcport, args.configname, args.username, args.password, args.chaindir, args.blocknetdir)
