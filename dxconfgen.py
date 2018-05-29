@@ -31,7 +31,7 @@ xbridgeconfj2_url = "https://raw.githubusercontent.com/BlocknetDX/blocknet-docs/
 def chain_lookup(s):
   return "https://raw.githubusercontent.com/BlocknetDX/blocknet-docs/master/json-config-templates/{}.json.j2".format(s.lower())
 
-def generate_confs(blockchain, p2pport, rpcport, configname, username, password, chaindir, blocknetdir):
+def generate_confs(blockchain, p2pport, rpcport, configname, username, password, chaindir, blocknetdir, blockdxdir):
   if blockchain:
     if len(blockchain) > 1:
       if p2pport:
@@ -47,6 +47,8 @@ def generate_confs(blockchain, p2pport, rpcport, configname, username, password,
       chaindir = '.'
     if blocknetdir is None:
       blocknetdir = '.'
+    if blockdxdir is None:
+      blockdxdir = '.'
     for blockchain in blockchain:
       if username is None:
         rpcuser = random_gen()
@@ -93,7 +95,18 @@ def generate_confs(blockchain, p2pport, rpcport, configname, username, password,
       xbridge_template = Template(xbridge_config)
       xbridge_result = xbridge_template.render(blockchain=blockchain, val=list(xbridge_json.values())[0])
       save_config(xbridge_result, os.path.join(blocknetdir, confFile+'-xbridge.conf'))
-    
+      
+      if blockchain == "BLOCK":
+        # Generate meta.json here
+        d = {
+                "addresses": {},
+                "tos": True,
+                "port": int(rpcport),
+                "password": rpcpass,
+                "user": rpcuser
+            }
+        save_config(json.dumps(d, indent=4), os.path.join(blockdxdir, 'meta.json'))
+        
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='blockdx-conf-gen')
   parser.add_argument('--verbose', action='store_true', help='verbose flag' )
@@ -106,8 +119,9 @@ if __name__ == '__main__':
   parser.add_argument('-u', '--username', type=str, help='RPC username, random by default', required=False, default=None)
   parser.add_argument('-p', '--password', type=str, help='RPC password, random by default', required=False, default=None)
   parser.add_argument('-cdir', '--chaindir', type=str, help='Chain config directory', required=False, default=None)
-  parser.add_argument('-bdir', '--blocknetdir', type=str, help='Blocknet config directore', required=False, default=None)
+  parser.add_argument('-bdir', '--blocknetdir', type=str, help='Blocknet config directory', required=False, default=None)
+  parser.add_argument('-ddir', '--blockdxdir', type=str, help='BlockDX config directory', required=False, default=None)
   parser.add_argument('--daemon', action='store_true', help='Run as daemon', required=False)
 
   args = parser.parse_args()
-  generate_confs(args.blockchain, args.p2pport, args.rpcport, args.configname, args.username, args.password, args.chaindir, args.blocknetdir)
+  generate_confs(args.blockchain, args.p2pport, args.rpcport, args.configname, args.username, args.password, args.chaindir, args.blocknetdir, args.blockdxdir)
